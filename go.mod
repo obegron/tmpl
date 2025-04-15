@@ -1,6 +1,6 @@
 module github.com/krakozaure/tmpl
 
-go 1.20
+go 1.23.0
 
 require (
 	github.com/BurntSushi/toml v1.3.2
@@ -18,5 +18,5 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
-	golang.org/x/crypto v0.3.0 // indirect
+	golang.org/x/crypto v0.37.0 // indirect
 )
