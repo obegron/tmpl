@@ -1,4 +1,4 @@
-module github.com/krakozaure/tmpl
+module github.com/obegron/tmpl
 
 go 1.23
 
