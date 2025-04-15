@@ -1,6 +1,6 @@
 module github.com/krakozaure/tmpl
 
-go 1.24.2
+go 1.23
 
 require (
 	github.com/BurntSushi/toml v1.3.2
