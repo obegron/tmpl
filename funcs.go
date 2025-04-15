@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 	"text/template"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/Masterminds/sprig/v3"
@@ -141,7 +142,7 @@ func fileMtime(file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return info.ModTime().String(), nil
+	return info.ModTime().Format(time.RFC3339), nil
 }
 
 func fileRead(file string) (string, error) {

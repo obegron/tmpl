@@ -2,7 +2,9 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
+	"fmt"
+	"io"
+	"log"
 	"os"
 	"strings"
 	"text/template"
@@ -14,6 +16,26 @@ func executeTemplateFile(input string) (string, error) {
 		outputBytes  bytes.Buffer
 		outputString string
 	)
+
+	if len(ctx) == 0 {
+		loadContext()
+	}
+
+	if strings.Contains(input, "{{") && strings.Contains(input, "}}") {
+		log.Printf("Processing filename as template: %s", input)
+		filenameTemplate, err := template.New("filename").Funcs(getFuncMap()).Parse(input)
+		if err != nil {
+			return "", fmt.Errorf("error parsing filename template: %w", err)
+		}
+
+		var processedFilename bytes.Buffer
+		if err := filenameTemplate.Execute(&processedFilename, ctx); err != nil {
+			return "", fmt.Errorf("error executing filename template: %w", err)
+		}
+
+		input = processedFilename.String()
+		log.Printf("Processed filename: %s", input)
+	}
 
 	inputBytes, err := readInput(input)
 	if err != nil {
@@ -27,12 +49,8 @@ func executeTemplateFile(input string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if Strict == true {
+	if Strict {
 		tmpl.Option("missingkey=error")
-	}
-
-	if len(ctx) == 0 {
-		loadContext()
 	}
 
 	err = tmpl.Execute(&outputBytes, ctx)
@@ -51,9 +69,9 @@ func readInput(input string) ([]byte, error) {
 		inputBytes []byte
 	)
 	if input == "-" {
-		inputBytes, err = ioutil.ReadAll(os.Stdin)
+		inputBytes, err = io.ReadAll(os.Stdin)
 	} else {
-		inputBytes, err = ioutil.ReadFile(input)
+		inputBytes, err = os.ReadFile(input)
 	}
 	return inputBytes, err
 }
