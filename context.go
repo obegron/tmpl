@@ -1,10 +1,11 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -14,6 +15,10 @@ import (
 var ctx = make(map[string]interface{})
 
 func loadContext() {
+	for k, v := range getEnvTemplateVariables() {
+		ctx[k] = v
+	}
+
 	for _, file := range FilesList {
 		for k, v := range getFileVariables(file) {
 			ctx[k] = v
@@ -25,10 +30,46 @@ func loadContext() {
 	}
 }
 
+func getEnvTemplateVariables() map[string]interface{} {
+	vars := make(map[string]interface{})
+
+	tmplVarsBase64 := os.Getenv("TMPL_VARS")
+	if tmplVarsBase64 == "" {
+		return vars
+	}
+
+	tmplData, err := base64.StdEncoding.DecodeString(tmplVarsBase64)
+	if err != nil {
+		log.Printf("Content of TMPL_VARS must be base64 encoded: %v", err)
+		return vars
+	}
+
+	tmplVars := make(map[string]interface{})
+	err = yaml.Unmarshal(tmplData, &tmplVars)
+	if err == nil {
+		for k, v := range tmplVars {
+			vars[k] = v
+		}
+		log.Printf("Loaded %d variables from TMPL_VARS environment variable as YAML", len(tmplVars))
+		return vars
+	}
+
+	err = json.Unmarshal(tmplData, &tmplVars)
+	if err == nil {
+		for k, v := range tmplVars {
+			vars[k] = v
+		}
+		log.Printf("Loaded %d variables from TMPL_VARS environment variable as JSON", len(tmplVars))
+		return vars
+	}
+	log.Printf("Error parsing TMPL_VARS as either YAML or JSON")
+	return vars
+}
+
 func getFileVariables(file string) map[string]interface{} {
 	vars := make(map[string]interface{})
 
-	bytes, err := ioutil.ReadFile(file)
+	bytes, err := os.ReadFile(file)
 	if err != nil {
 		log.Printf("unable to read file\n%v\n", err)
 		return vars
