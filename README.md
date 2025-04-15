@@ -41,6 +41,13 @@ $ echo 'Editor = {{ env "EDITOR" }}, Shell = {{ env "SHELL" }}' | tmpl -
 Editor = nvim, Shell = /bin/bash
 ```
 
+- `stdin` and yaml/json from environment variable TMPL_VARS.
+
+```bash
+$ export TMPL_VARS=$(echo -n '{"src":"cloud"}' | base64) ; echo 'Hello, from {{ .src }}!' | ./tmpl -
+Hello, from cloud!
+```
+
 - `stdin` and CLI variables.
 
 ```bash
