@@ -40,6 +40,7 @@ func getFuncMap() template.FuncMap {
 	f["toOsPath"] = toOsPath
 	f["toSlash"] = toSlash
 
+	f["now"] = currentTime
 	return f
 }
 
@@ -195,4 +196,10 @@ func toOsPath(path string) string {
 
 func toSlash(path string) string {
 	return strings.ReplaceAll(path, "\\", "/")
+}
+
+// utils
+
+func currentTime() string {
+	return time.Now().UTC().Format("2006-01-02 15:04:05Z")
 }
