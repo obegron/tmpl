@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -41,6 +42,7 @@ func getFuncMap() template.FuncMap {
 	f["toSlash"] = toSlash
 
 	f["now"] = currentTime
+	f["urlHostname"] = urlHostname
 	return f
 }
 
@@ -202,4 +204,18 @@ func toSlash(path string) string {
 
 func currentTime() string {
 	return time.Now().UTC().Format("2006-01-02 15:04:05Z")
+}
+
+func urlHostname(rawURL string) string {
+	if rawURL == "" {
+		return ""
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil || u.Host == "" {
+		// fallback: strip scheme manually
+		rawURL = strings.TrimPrefix(rawURL, "http://")
+		rawURL = strings.TrimPrefix(rawURL, "https://")
+		return strings.SplitN(rawURL, "/", 2)[0]
+	}
+	return u.Host
 }
