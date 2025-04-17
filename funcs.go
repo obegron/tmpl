@@ -43,6 +43,7 @@ func getFuncMap() template.FuncMap {
 
 	f["now"] = currentTime
 	f["urlHostname"] = urlHostname
+	f["urlPort"] = urlPort
 	return f
 }
 
@@ -218,4 +219,23 @@ func urlHostname(rawURL string) string {
 		return strings.SplitN(rawURL, "/", 2)[0]
 	}
 	return u.Host
+}
+
+func urlPort(rawURL string) string {
+	if rawURL == "" {
+		return ""
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	switch u.Scheme {
+	case "https":
+		return "443"
+	case "http":
+		return "80"
+	default:
+		return u.Port()
+	}
 }
