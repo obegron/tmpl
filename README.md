@@ -41,10 +41,10 @@ $ echo 'Editor = {{ env "EDITOR" }}, Shell = {{ env "SHELL" }}' | tmpl -
 Editor = nvim, Shell = /bin/bash
 ```
 
-- `stdin` and yaml/json from environment variable TMPL_VARS.
+- `stdin` and yaml/json from environment variable TMPLVARS.
 
 ```bash
-$ export TMPL_VARS=$(echo -n '{"src":"cloud"}' | base64) ; echo 'Hello, from {{ .src }}!' | ./tmpl -
+$ export TMPLVARS=$(echo -n '{"src":"cloud"}' | base64) ; echo 'Hello, from {{ .src }}!' | ./tmpl -
 Hello, from cloud!
 ```
 
@@ -60,7 +60,7 @@ Hello, bar !
 Output is not pasted here because of its length.
 
 ```bash
-$ tmpl -f ./stores/data.yaml ./inputs/sample.txt.tmpl
+tmpl -f ./stores/data.yaml ./inputs/sample.txt.tmpl
 ```
 
 ## Configuration

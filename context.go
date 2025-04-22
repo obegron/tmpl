@@ -33,14 +33,14 @@ func loadContext() {
 func getEnvTemplateVariables() map[string]interface{} {
 	vars := make(map[string]interface{})
 
-	tmplVarsBase64 := os.Getenv("TMPL_VARS")
+	tmplVarsBase64 := os.Getenv("TMPLVARS")
 	if tmplVarsBase64 == "" {
 		return vars
 	}
 
 	tmplData, err := base64.StdEncoding.DecodeString(tmplVarsBase64)
 	if err != nil {
-		log.Printf("Content of TMPL_VARS must be base64 encoded: %v", err)
+		log.Printf("Content of TMPLVARS must be base64 encoded: %v", err)
 		return vars
 	}
 
@@ -50,7 +50,7 @@ func getEnvTemplateVariables() map[string]interface{} {
 		for k, v := range tmplVars {
 			vars[k] = v
 		}
-		log.Printf("Loaded %d variables from TMPL_VARS environment variable as YAML", len(tmplVars))
+		log.Printf("Loaded %d variables from TMPLVARS environment variable as YAML", len(tmplVars))
 		return vars
 	}
 
@@ -59,10 +59,10 @@ func getEnvTemplateVariables() map[string]interface{} {
 		for k, v := range tmplVars {
 			vars[k] = v
 		}
-		log.Printf("Loaded %d variables from TMPL_VARS environment variable as JSON", len(tmplVars))
+		log.Printf("Loaded %d variables from TMPLVARS environment variable as JSON", len(tmplVars))
 		return vars
 	}
-	log.Printf("Error parsing TMPL_VARS as either YAML or JSON")
+	log.Printf("Error parsing TMPLVARS as either YAML or JSON")
 	return vars
 }
 
