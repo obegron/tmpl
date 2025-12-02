@@ -50,6 +50,7 @@ func getFuncMap() template.FuncMap {
 	f["urlHostname"] = urlHostname
 	f["urlPort"] = urlPort
 
+	f["replace"] = replace
 	f["wrapWith"] = wrapWith
 	f["uuidv4"] = uuidv4
 
@@ -324,7 +325,12 @@ func wrapWith(width int, newline, input string) string {
 	return result.String()
 }
 
+func replace(s, old, new string) string {
+	return strings.ReplaceAll(s, old, new)
+}
+
 func uuidv4() string {
 	return uuid.New().String()
 }
+
 
