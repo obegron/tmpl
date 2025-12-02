@@ -11,22 +11,25 @@ import (
 	"text/template"
 	"time"
 
+	"encoding/json"
 	"github.com/BurntSushi/toml"
-	"github.com/Masterminds/sprig/v3"
+	"github.com/google/uuid"
 	"gopkg.in/yaml.v3"
 )
 
 var inputsDir = "."
 
 func getFuncMap() template.FuncMap {
-	f := sprig.GenericFuncMap()
+	f := make(template.FuncMap)
 
 	f["fromInputDir"] = fromInputDir
 	f["include"] = include
+	f["expandenv"] = expandenv
 
 	f["toBool"] = toBool
 	f["toToml"] = toToml
 	f["toYaml"] = toYaml
+	f["toJson"] = toJson
 
 	f["absPath"] = absPath
 	f["fileExists"] = fileExists
@@ -41,9 +44,15 @@ func getFuncMap() template.FuncMap {
 	f["toOsPath"] = toOsPath
 	f["toSlash"] = toSlash
 
+	f["env"] = getEnv
+
 	f["now"] = currentTime
 	f["urlHostname"] = urlHostname
 	f["urlPort"] = urlPort
+
+	f["wrapWith"] = wrapWith
+	f["uuidv4"] = uuidv4
+
 	return f
 }
 
@@ -87,6 +96,10 @@ func getIncludeDir(input string) (string, error) {
 	}
 }
 
+func expandenv(input string) string {
+	return os.ExpandEnv(input)
+}
+
 // --- Type conversion -----------------------------------------------------------------------------
 
 func toBool(value string) (bool, error) {
@@ -115,6 +128,14 @@ func toYaml(v interface{}) (string, error) {
 	return string(data), nil
 }
 
+func toJson(v interface{}) (string, error) {
+	data, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
 // --- Paths ---------------------------------------------------------------------------------------
 
 func absPath(file string) (string, error) {
@@ -127,7 +148,10 @@ func absPath(file string) (string, error) {
 
 func fileExists(path string) (bool, error) {
 	_, err := os.Stat(path)
-	if os.IsNotExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	return true, nil
@@ -135,7 +159,10 @@ func fileExists(path string) (bool, error) {
 
 func fileMode(path string) (string, error) {
 	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
 		return "", err
 	}
 	return info.Mode().String(), nil
@@ -144,6 +171,9 @@ func fileMode(path string) (string, error) {
 func fileMtime(file string) (string, error) {
 	info, err := os.Stat(file)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
 		return "", err
 	}
 	return info.ModTime().Format(time.RFC3339), nil
@@ -152,6 +182,9 @@ func fileMtime(file string) (string, error) {
 func fileRead(file string) (string, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
 		return "", err
 	}
 	return string(data), nil
@@ -160,6 +193,9 @@ func fileRead(file string) (string, error) {
 func fileSize(file string) (int64, error) {
 	info, err := os.Stat(file)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return 0, nil
+		}
 		return 0, err
 	}
 	return info.Size(), nil
@@ -167,7 +203,10 @@ func fileSize(file string) (int64, error) {
 
 func isDir(path string) (bool, error) {
 	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	return info.IsDir(), nil
@@ -175,7 +214,10 @@ func isDir(path string) (bool, error) {
 
 func isFile(path string) (bool, error) {
 	info, err := os.Stat(path)
-	if os.IsNotExist(err) {
+	if err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
 		return false, err
 	}
 	return info.Mode().IsRegular(), nil
@@ -199,6 +241,10 @@ func toOsPath(path string) string {
 
 func toSlash(path string) string {
 	return strings.ReplaceAll(path, "\\", "/")
+}
+
+func getEnv(name string) string {
+	return os.Getenv(name)
 }
 
 // utils
@@ -239,3 +285,46 @@ func urlPort(rawURL string) string {
 		return u.Port()
 	}
 }
+
+func wrapWith(width int, newline, input string) string {
+	if width <= 0 {
+		return input // No wrapping
+	}
+
+	words := strings.Fields(input)
+	if len(words) == 0 {
+		return ""
+	}
+
+	var result strings.Builder
+	currentLineLength := 0
+
+	for i, word := range words {
+		if currentLineLength == 0 {
+			// Start of a new line
+			result.WriteString(word)
+			currentLineLength = len(word)
+		} else if currentLineLength+1+len(word) <= width {
+			// Word fits on current line
+			result.WriteString(" ")
+			result.WriteString(word)
+			currentLineLength += 1 + len(word)
+		} else {
+			// Word doesn't fit, start a new line
+			result.WriteString(newline)
+			result.WriteString(word)
+			currentLineLength = len(word)
+		}
+
+		if i < len(words)-1 && currentLineLength >= width {
+			result.WriteString(newline)
+			currentLineLength = 0
+		}
+	}
+	return result.String()
+}
+
+func uuidv4() string {
+	return uuid.New().String()
+}
+
